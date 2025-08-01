@@ -2,8 +2,12 @@ const express = require("express");
 const app = express();
 const PORT = 5000;
 const mongoose = require("mongoose");
+require('dotenv').config();
+
+
+
 const authRoutes = require("./routes/authRoutes");
-require("dotenv").config();
+
 
 // ✅ MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, {
