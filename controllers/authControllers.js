@@ -61,8 +61,8 @@ const Register = async (req, res) => {
       message: "User registered successfully",
       user: {
         id: newUser._id,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
+        firstName: newUser.firstname,
+        lastName: newUser.lastname,
         email: newUser.email,
         mobile: newUser.mobile,
       },
@@ -75,7 +75,7 @@ const Register = async (req, res) => {
 // ✅ Login Controller
 const Login = async (req, res) => {
   const { email, password } = req.query;
-  console.log(process.env.JWT_SECRET)
+  
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ message: "Email not found" });
@@ -85,7 +85,7 @@ const Login = async (req, res) => {
 
     const authToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-
+     
     // ✅ Set Refresh Token in HTTP-only Cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -94,12 +94,14 @@ const Login = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+
+
     res.status(200).json({
       message: "Login successful",
       user: {
         id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.firstname,
+        lastName: user.lastname,
         email: user.email,
         authToken,
       },
@@ -180,7 +182,7 @@ const verifyOTP = (req, res) => {
 
 // ✅ Reset Password
 const resetPassword = async (req, res) => {
-  const { email, newPassword } = req.body;
+  const { email, newPassword } = req.query;
 
   try {
     const stored = otpStore.get(email);
@@ -200,11 +202,27 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Password reset failed", error: error.message });
   }
 };
+const logout=async (req,res)=>{
+   req.session.destroy((err) => {
+    if (err) {
+      console.error("❌ Session destroy error:", err);
+      return res.status(500).json({ message: "Logout failed" });
+    }
 
+    res.clearCookie("connect.sid", {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // ensure this matches your cookie config
+    });
+
+    return res.status(200).json({ message: "Logged out successfully" });
+  });
+}
 module.exports = {
   Register,
   Login,
   OTPgenerator,
   verifyOTP,
   resetPassword,
+  logout
 };
