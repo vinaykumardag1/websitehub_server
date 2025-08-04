@@ -8,7 +8,7 @@ const rateLimit = require("express-rate-limit");
 // const MongoStore = require("connect-mongo");
 
 const authRoutes = require("./routes/authRoutes");
-
+const adminRoutes=require("./routes/adminRoutes")
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -56,7 +56,7 @@ app.use(limiter);
 
 // ✅ Routes
 app.use("/api/customer", authRoutes);
-
+app.use("/api/admin",adminRoutes)
 // ✅ Root Route
 app.get("/", (req, res) => {
   res.send("✅ Express works");

@@ -1,41 +1,49 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const {sendMail}=require("../config/mailer")
+const { sendMail } = require("../config/mailer");
 
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "15m";
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || "7d";
+
+// Temporary OTP store (in-memory)
+const otpStore = new Map();
+
+// 🔐 Generate JWT Tokens
 const generateAccessToken = (user) => {
   return jwt.sign(
     {
-      id: user._id,
-      email: user.email,
-      firstName: user.firstname,
-      lastName: user.lastname,
-      mobile: user.mobile,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || "15m" }
-  );
-};
-
-// ✅ Refresh Token Generator
-const generateRefreshToken = (user) => {
-  return jwt.sign(
-      {
       id: user._id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       mobile: user.mobile,
     },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d" }
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
+};
+
+const generateRefreshToken = (user) => {
+  return jwt.sign(
+    {
+      id: user._id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      mobile: user.mobile,
+    },
+    JWT_REFRESH_SECRET,
+    { expiresIn: JWT_REFRESH_EXPIRES_IN }
   );
 };
 
 // ✅ Register Controller
 const Register = async (req, res) => {
   const { firstName, lastName, email, mobile, password, terms_conditions } = req.query;
- 
+
   try {
     if (!firstName || !lastName || !email || !mobile || !password || terms_conditions === undefined) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -54,15 +62,15 @@ const Register = async (req, res) => {
       email,
       mobile,
       password: hashedPassword,
-      terms_conditions: terms_conditions === true || terms_conditions === "true",
+      terms_conditions,
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       message: "User registered successfully",
       user: {
         id: newUser._id,
-        firstName: newUser.firstname,
-        lastName: newUser.lastname,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
         email: newUser.email,
         mobile: newUser.mobile,
       },
@@ -73,9 +81,11 @@ const Register = async (req, res) => {
 };
 
 // ✅ Login Controller
+const { v4: uuidv4 } = require("uuid");
+
 const Login = async (req, res) => {
-  const { email, password } = req.query;
-  
+  const { email, password } = req.body; // Use body, not query
+
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ message: "Email not found" });
@@ -85,8 +95,13 @@ const Login = async (req, res) => {
 
     const authToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-     
-    // ✅ Set Refresh Token in HTTP-only Cookie
+
+    // ✅ Generate and assign sessionId
+    // const sessionId = uuidv4();
+    // req.session.userId = user._id;
+    // req.session.sessionId = sessionId;
+
+    // ✅ Set refresh token cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -94,33 +109,30 @@ const Login = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-
-
     res.status(200).json({
       message: "Login successful",
+      sessionId,
+      authToken,
       user: {
         id: user._id,
         firstName: user.firstname,
         lastName: user.lastname,
         email: user.email,
-        authToken,
+        mobile: user.mobile,
       },
     });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ message: "Login failed", error: error.message });
   }
 };
 
-// ✅ Temporary OTP Store
-const otpStore = new Map();
 
 // ✅ OTP Generator
 const OTPgenerator = async (req, res) => {
   const { email } = req.query;
 
-  if (!email) {
-    return res.status(400).json({ error: "Email is required" });
-  }
+  if (!email) return res.status(400).json({ error: "Email is required" });
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = Date.now() + 5 * 60 * 1000;
@@ -140,17 +152,17 @@ const OTPgenerator = async (req, res) => {
           <p>This code is valid for 5 minutes.</p>
           <p>If you did not request this, please ignore this email.</p>
         </div>
-      `
+      `,
     });
 
-    console.log(`OTP sent to ${email}: ${otp}`);
-
+    console.log(`✅ OTP sent to ${email}: ${otp}`);
     return res.status(200).json({ message: "OTP sent to email" });
   } catch (error) {
-    console.error("Error sending OTP email:", error.message);
+    console.error("❌ OTP email error:", error.message);
     return res.status(500).json({ error: "Failed to send OTP email" });
   }
 };
+
 // ✅ Verify OTP
 const verifyOTP = (req, res) => {
   const { email, otp } = req.query;
@@ -160,10 +172,7 @@ const verifyOTP = (req, res) => {
   }
 
   const stored = otpStore.get(email);
-
-  if (!stored) {
-    return res.status(400).json({ error: "No OTP found for this email" });
-  }
+  if (!stored) return res.status(400).json({ error: "No OTP found for this email" });
 
   if (Date.now() > stored.expiresAt) {
     otpStore.delete(email);
@@ -191,38 +200,49 @@ const resetPassword = async (req, res) => {
       return res.status(403).json({ error: "OTP verification required" });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    await User.findOneAndUpdate({ email }, { password: hashedPassword });
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
 
     otpStore.delete(email);
 
-    return res.status(200).json({ message: "Password reset successful" });
+    // Optionally issue token after reset
+    const authToken = generateAccessToken(user);
+
+    return res.status(200).json({
+      message: "Password reset successful",
+      authToken,
+    });
   } catch (error) {
     res.status(500).json({ message: "Password reset failed", error: error.message });
   }
 };
-const logout=async (req,res)=>{
-   req.session.destroy((err) => {
-    if (err) {
-      console.error("❌ Session destroy error:", err);
-      return res.status(500).json({ message: "Logout failed" });
-    }
 
-    res.clearCookie("connect.sid", {
-      path: "/",
+// ✅ Logout
+const logout = async (req, res) => {
+  try {
+    // Clear cookie if using JWT tokens
+    res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // ensure this matches your cookie config
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
     });
 
     return res.status(200).json({ message: "Logged out successfully" });
-  });
-}
+  } catch (err) {
+    console.error("❌ Logout error:", err);
+    return res.status(500).json({ message: "Logout failed" });
+  }
+};
+
 module.exports = {
   Register,
   Login,
   OTPgenerator,
   verifyOTP,
   resetPassword,
-  logout
+  logout,
 };

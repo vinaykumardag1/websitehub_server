@@ -1,19 +1,24 @@
 const fs = require("fs");
 const path = require("path");
-const userFav = require("../models/userFav");
+const Items = require("../models/Items");
+const {generateSlug}=require("../config/CategorySlug")
 
 // ✅ Add new item
 const addItems = async (req, res) => {
   const { websitename, websiteUrl, description } = req.body;
   const image = req.file ? req.file.filename : null;
-
+  
   try {
-    const exists = await userFav.findOne({ websitename });
+    const exists = await Items.findOne({ websitename });
     if (exists) {
       return res.status(400).json({ message: "Website already exists" });
     }
 
-    const newItem = new userFav({
+    if (!image) {
+      return res.status(400).json({ message: "Image file not read" }); 
+    }
+
+    const newItem = new Items({
       websitename,
       websiteUrl,
       description,
@@ -21,30 +26,29 @@ const addItems = async (req, res) => {
     });
 
     await newItem.save();
-    res.status(201).json({ message: "Item added successfully", item: newItem });
+    return res.status(201).json({ message: "Item added successfully", item: newItem }); // ✅ Add 'return'
   } catch (err) {
-    console.error("Error adding item:", err);
-    res.status(500).json({ message: "Server error while adding item" });
+    console.error("❌ Error adding item:", err);
+    return res.status(500).json({ message: "Server error while adding item" }); // ✅ Add 'return'
   }
 };
 
 
 // ✅ Remove item
 const removeItems = async (req, res) => {
-  const { itemId } = req.query;
+  const { id } = req.params; // from /delete/:id
 
   try {
-    if (!itemId) {
-      return res.status(400).json({ message: "Missing itemId in query" });
+    if (!id) {
+      return res.status(400).json({ message: "Missing item ID in route" });
     }
 
-    const item = await userFav.findByIdAndDelete(itemId);
-
+    const item = await Items.findByIdAndDelete(id);
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    // Optional: delete image from server
+    // Delete image from uploads folder
     if (item.image) {
       const imagePath = path.join(__dirname, "../uploads", item.image);
       fs.unlink(imagePath, (err) => {
@@ -54,32 +58,35 @@ const removeItems = async (req, res) => {
 
     res.status(200).json({ message: "Item removed successfully", item });
   } catch (err) {
-    console.error("Error removing item:", err);
+    console.error("❌ Error removing item:", err);
     res.status(500).json({ message: "Server error while removing item" });
   }
 };
 
-// ✅ Update item
-const updateItem = async (req, res) => {
-  const { itemId } = req.query;
-  const { websitename, websiteUrl, description } = req.body;
-  const newImage = req.file ? req.file.filename : null;
 
+
+const updateItem = async (req, res) => {
   try {
-    if (!itemId) {
-      return res.status(400).json({ message: "Missing itemId in query" });
+    const { id } = req.params; // from /update-item/:id
+    const { websitename, websiteUrl, description } = req.body;
+    const newImage = req.file ? req.file : null;
+
+    if (!id) {
+      return res.status(400).json({ message: "Missing item ID in route" });
     }
 
-    const item = await userFav.findById(itemId);
+    const item = await Items.findById(id);
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    // Optional: delete old image if new one uploaded
+    // Delete old image if a new one is uploaded
     if (newImage && item.image) {
       const oldImagePath = path.join(__dirname, "../uploads", item.image);
       fs.unlink(oldImagePath, (err) => {
-        if (err) console.warn("⚠️ Could not delete old image:", err.message);
+        if (err) {
+          console.warn("⚠️ Could not delete old image:", err.message);
+        }
       });
     }
 
@@ -91,21 +98,80 @@ const updateItem = async (req, res) => {
 
     const updatedItem = await item.save();
 
-    res.status(200).json({ message: "Item updated successfully", item: updatedItem });
+    res.status(200).json({
+      message: "Item updated successfully",
+      item: updatedItem
+    });
   } catch (error) {
-    console.error("Error updating item:", error);
+    console.error("❌ Error updating item:", error);
     res.status(500).json({ message: "Server error while updating item" });
   }
 };
 
+
+
 // ✅ Get all items
 const getItems = async (req, res) => {
   try {
-    const items = await userFav.find().sort({ createdAt: -1 });
+    const items = await Items.find().sort({ createdAt: -1 });
     res.status(200).json({ message: "Items retrieved successfully", items });
   } catch (error) {
-    console.error("Error fetching items:", error);
+    console.error("❌ Error fetching items:", error);
     res.status(500).json({ message: "Server error while fetching items" });
+  }
+};
+
+
+
+const addCategory = async (req, res) => {
+  try {
+    const { categoryname, description, image } = req.body;
+
+    if (!categoryname) {
+      return res.status(400).json({ message: "Category name is required" });
+    }
+
+    const slug = generateSlug(categoryname);
+
+    // Check if slug already exists
+    const existingCategory = await Category.findOne({ slug });
+    if (existingCategory) {
+      return res.status(409).json({ message: "Category already exists" });
+    }
+
+    const newCategory = new Category({
+      categoryname,
+      description,
+      image,
+      slug
+    });
+
+    await newCategory.save();
+
+    res.status(201).json({ message: "Category created successfully", category: newCategory });
+  } catch (error) {
+    console.error("Error adding category:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+const removeCategory = async (req, res) => {
+  const { slug } = req.body;
+
+  if (!slug) {
+    return res.status(400).json({ message: "Slug is required" });
+  }
+
+  try {
+    const deletedCategory = await Category.findOneAndDelete({ slug });
+
+    if (!deletedCategory) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    res.status(200).json({ message: "Category deleted successfully", category: deletedCategory });
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -114,4 +180,7 @@ module.exports = {
   removeItems,
   updateItem,
   getItems,
+  //catgories 
+  addCategory,
+  removeCategory,
 };
