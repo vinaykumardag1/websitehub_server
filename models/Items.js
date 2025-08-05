@@ -22,8 +22,7 @@ const ItemSchema = new mongoose.Schema({
     max: 5,
     default: 0,
   },
-  features: [String], // e.g., ["API access", "No login required", "Dark mode"]
-  language: String, // e.g., "English", "Multilingual"
+  features: [String], 
   country: String, // e.g., "USA", "Germany", or region of focus
 });
 const Item=mongoose.model("items",ItemSchema)

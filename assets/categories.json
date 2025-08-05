@@ -1,0 +1,121 @@
+[
+  {
+    "categoryname": "AI",
+    "description": "Resources and tools related to artificial intelligence.",
+    "slug": "ai",
+    "image": "https://uxwing.com/wp-content/themes/uxwing/download/technology-devices/artificial-intelligence-ai-icon.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "AI Tools",
+    "description": "Collection of tools powered by AI to boost productivity.",
+    "slug": "ai-tools",
+    "image": "https://cdn-icons-png.flaticon.com/512/9449/9449754.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Design",
+    "description": "Design inspiration, tools, and resources.",
+    "slug": "design",
+    "image": "https://cdn-icons-png.flaticon.com/512/1185/1185316.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Productivity",
+    "description": "Tools and techniques to increase productivity.",
+    "slug": "productivity",
+    "image": "https://uxwing.com/wp-content/themes/uxwing/download/business-professional-services/productivity-icon.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Coding",
+    "description": "Resources and tools for software development.",
+    "slug": "coding",
+    "image": "https://cdn-icons-png.flaticon.com/512/1055/1055687.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Course",
+    "description": "Educational courses and learning platforms.",
+    "slug": "course",
+    "image": "https://cdn-icons-png.flaticon.com/512/3135/3135768.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "E-Commerce",
+    "description": "Online shopping platforms and marketplaces.",
+    "slug": "e-commerce",
+    "image": "https://cdn-icons-png.flaticon.com/512/1170/1170576.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Editing",
+    "description": "Photo, video, and document editing tools.",
+    "slug": "editing",
+    "image": "https://cdn-icons-png.flaticon.com/512/1828/1828911.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Education",
+    "description": "Educational tools, platforms, and resources.",
+    "slug": "education",
+    "image": "https://cdn-icons-png.flaticon.com/512/3135/3135789.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Entertainment",
+    "description": "Movies, games, and other entertainment platforms.",
+    "slug": "entertainment",
+    "image": "https://cdn-icons-png.flaticon.com/512/2920/2920259.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Government",
+    "description": "Government services and digital tools.",
+    "slug": "government",
+    "image": "https://cdn-icons-png.flaticon.com/512/4264/4264889.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Health",
+    "description": "Health and wellness apps and services.",
+    "slug": "health",
+    "image": "https://uxwing.com/wp-content/themes/uxwing/download/health-medical/healthcare-medical-icon.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "News",
+    "description": "Latest news and media platforms.",
+    "slug": "news",
+    "image": "https://cdn-icons-png.flaticon.com/512/2965/2965879.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Others",
+    "description": "Other miscellaneous tools and resources.",
+    "slug": "others",
+    "image": "https://cdn-icons-png.flaticon.com/512/565/565547.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Social Media",
+    "description": "Social media tools and platforms.",
+    "slug": "social-media",
+    "image": "https://cdn-icons-png.flaticon.com/512/747/747543.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Technology",
+    "description": "Tech innovations, tools, and trends.",
+    "slug": "technology",
+    "image": "https://cdn-icons-png.flaticon.com/512/3050/3050525.png",
+    "isActive": true
+  },
+  {
+    "categoryname": "Travel",
+    "description": "Travel apps, guides, and booking tools.",
+    "slug": "travel",
+    "image": "https://cdn-icons-png.flaticon.com/512/201/201623.png",
+    "isActive": true
+  }
+]

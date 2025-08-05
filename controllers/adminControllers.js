@@ -3,21 +3,42 @@ const path = require("path");
 const Items = require("../models/Items");
 const Categories=require("../models/category")
 const Tags=require("../models/Tags")
-const {generateSlug}=require("../config/utils")
+const {generateSlug}=require("../config/utils");
+const Item = require("../models/Items");
 
 // ✅ Add new item
 const addItems = async (req, res) => {
-  const { websitename, websiteUrl, description } = req.body;
-  const image = req.file ? req.file.filename : null;
-  
   try {
-    const exists = await Items.findOne({ websitename });
-    if (exists) {
-      return res.status(400).json({ message: "Website already exists" });
+    const {
+      websitename,
+      websiteUrl,
+      description,
+      category,
+      mobileApp,
+      ai,
+      pricingType,
+      pricingDetails,
+      tags,
+      rating,
+      features,
+      country
+    } = req.body;
+    console.log("data",req.body)
+
+    const image = req.file ? req.file.image : null;
+
+    // Validate required fields
+    if (!websitename || !websiteUrl || !category) {
+      return res.status(400).json({ message: "Required fields are missing (websitename, websiteUrl, category)" });
     }
 
     if (!image) {
-      return res.status(400).json({ message: "Image file not read" }); 
+      return res.status(400).json({ message: "Image file not provided or invalid format" });
+    }
+
+    const exists = await Items.findOne({ websitename });
+    if (exists) {
+      return res.status(400).json({ message: "Website already exists" });
     }
 
     const newItem = new Items({
@@ -25,16 +46,39 @@ const addItems = async (req, res) => {
       websiteUrl,
       description,
       image,
+      category,
+      mobileApp,
+      ai: false, 
+      pricingType,
+      pricingDetails,
+      tags: Array.isArray(tags) ? tags : tags?.split(","),
+      rating: rating ? parseFloat(rating) : undefined,
+      features: Array.isArray(features) ? features : features?.split(","),
+      country,
     });
 
     await newItem.save();
-    return res.status(201).json({ message: "Item added successfully", item: newItem }); // ✅ Add 'return'
+
+    return res.status(201).json({ message: "Item added successfully", item: newItem });
+
   } catch (err) {
     console.error("❌ Error adding item:", err);
-    return res.status(500).json({ message: "Server error while adding item" }); // ✅ Add 'return'
+    return res.status(500).json({ message: "Server error while adding item" });
   }
 };
 
+// const getCategoriesOnly = async (req, res) => {
+//   try {
+//     const categories = await Items.distinct("category");
+//     res.status(200).json({
+//       message: "Categories retrieved successfully",
+//       categories,
+//     });
+//   } catch (error) {
+//     console.error("❌ Error fetching categories:", error);
+//     res.status(500).json({ message: "Server error while fetching categories" });
+//   }
+// };
 
 // ✅ Remove item
 const removeItems = async (req, res) => {
@@ -115,24 +159,41 @@ const updateItem = async (req, res) => {
 // ✅ Get all items
 const getItems = async (req, res) => {
   try {
-    const items = await Items.find().sort({ createdAt: -1 });
-    res.status(200).json({ message: "Items retrieved successfully", items });
+    const page = parseInt(req.query.page) || 1;      // Default to page 1
+    const limit = parseInt(req.query.limit) || 10;   // Default to 10 items per page
+    const skip = (page - 1) * limit;
+
+    const [items, totalItems] = await Promise.all([
+      Items.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Items.countDocuments()
+    ]);
+
+    res.status(200).json({
+      message: "Items retrieved successfully",
+      items,
+      pagination: {
+        totalItems,
+        currentPage: page,
+        totalPages: Math.ceil(totalItems / limit),
+        limit
+      }
+    });
   } catch (error) {
     console.error("❌ Error fetching items:", error);
     res.status(500).json({ message: "Server error while fetching items" });
   }
 };
 
-
-
+// 
 const addCategory = async (req, res) => {
   try {
     const { categoryname, description, image } = req.body;
-
     if (!categoryname) {
       return res.status(400).json({ message: "Category name is required" });
     }
-
     const slug = generateSlug(categoryname);
 
     // Check if slug already exists
@@ -192,15 +253,11 @@ const getCategories = async (req, res) => {
 
 const addTags = async (req, res) => {
   const { tags, description } = req.body;
-
   try {
-
     const existingTag = await Tags.findOne({ tags: tags });
     if (existingTag) {
       return res.status(400).json({ message: 'Tag already exists' });
     }
-
-
     const newTag = new Tags({ tags, description });
     await newTag.save();
 
@@ -212,12 +269,10 @@ const addTags = async (req, res) => {
 
 const removeTags = async (req, res) => {
   const { tag } = req.body;
-
   try {
     if (!tag) {
       return res.status(400).json({ message: "Tag is required" });
     }
-
     const deletedTag = await Tags.findOneAndDelete({ name: tag }); 
 
     if (!deletedTag) {
@@ -254,6 +309,7 @@ module.exports = {
   addCategory,
   removeCategory,
   getCategories,
+  getCategoriesOnly,
   // tags
   addTags,
   removeTags,

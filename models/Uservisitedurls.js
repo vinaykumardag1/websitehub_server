@@ -1,4 +1,3 @@
-// models/visitedUrls.js
 const mongoose = require('mongoose');
 
 const visitedSchema = new mongoose.Schema({

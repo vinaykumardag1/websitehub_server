@@ -61,6 +61,12 @@ app.use("/api/admin",adminRoutes)
 app.get("/", (req, res) => {
   res.send("✅ Express works");
 });
+app.use((err, req, res, next) => {
+  if (err instanceof Error && err.message === "Only images are allowed") {
+    return res.status(400).json({ message: err.message });
+  }
+  next(err);
+});
 
 // ✅ Start Server
 app.listen(PORT, () => {
