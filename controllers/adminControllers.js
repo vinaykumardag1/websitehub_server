@@ -1,7 +1,9 @@
 const fs = require("fs");
 const path = require("path");
 const Items = require("../models/Items");
-const {generateSlug}=require("../config/CategorySlug")
+const Categories=require("../models/category")
+const Tags=require("../models/Tags")
+const {generateSlug}=require("../config/utils")
 
 // ✅ Add new item
 const addItems = async (req, res) => {
@@ -134,7 +136,7 @@ const addCategory = async (req, res) => {
     const slug = generateSlug(categoryname);
 
     // Check if slug already exists
-    const existingCategory = await Category.findOne({ slug });
+    const existingCategory = await Categories.findOne({ slug });
     if (existingCategory) {
       return res.status(409).json({ message: "Category already exists" });
     }
@@ -146,7 +148,7 @@ const addCategory = async (req, res) => {
       slug
     });
 
-    await newCategory.save();
+    await newCategories.save();
 
     res.status(201).json({ message: "Category created successfully", category: newCategory });
   } catch (error) {
@@ -162,7 +164,7 @@ const removeCategory = async (req, res) => {
   }
 
   try {
-    const deletedCategory = await Category.findOneAndDelete({ slug });
+    const deletedCategory = await Categories.findOneAndDelete({ slug });
 
     if (!deletedCategory) {
       return res.status(404).json({ message: "Category not found" });
@@ -172,6 +174,37 @@ const removeCategory = async (req, res) => {
   } catch (error) {
     console.error("Error deleting category:", error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+const addTags=async(req,res)=>{
+   const {tags,description}=req.body;
+   try{
+    const tag=await Tags.findOne({tags:tags})
+    if(tag){
+      return res.status(400).json({message:'tag is already exitsed'})
+    }
+   }catch(error){
+    return res.json({message:"error occured",error})
+   }
+}
+const removeTags = async (req, res) => {
+  const { tag } = req.body;
+
+  try {
+    if (!tag) {
+      return res.status(400).json({ message: "Tag is required" });
+    }
+
+    const deletedTag = await Tags.findOneAndDelete({ name: tag }); 
+
+    if (!deletedTag) {
+      return res.status(404).json({ message: "Tag not found" });
+    }
+
+    return res.status(200).json({ message: "Tag deleted successfully", tag: deletedTag });
+  } catch (error) {
+    console.error("Error deleting tag:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 

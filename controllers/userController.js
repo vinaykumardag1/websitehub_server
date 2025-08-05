@@ -60,15 +60,16 @@ const addVisitedUrls = async (req, res) => {
     const existing = await visitedUrls.findOne({ userId, url });
 
     if (existing) {
-  
       existing.count += 1;
       existing.date = new Date();
       await existing.save();
+
       return res.status(200).json({ message: 'Visit count updated', data: existing });
     } else {
       // First time visit
-      const newVisit = new VisitedUrl({ userId, url });
+      const newVisit = new visitedUrls({ userId, url, count: 1, date: new Date() });
       await newVisit.save();
+
       return res.status(201).json({ message: 'Visit recorded', data: newVisit });
     }
   } catch (err) {
@@ -76,6 +77,7 @@ const addVisitedUrls = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 // Remove all visited URLs for a specific user
 const removeVisitedUrls = async (req, res) => {
   const { id: userId } = req.body;
