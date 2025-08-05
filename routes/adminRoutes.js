@@ -14,7 +14,7 @@ const {
   removeTags,
   getCategories,
   getTags,
-  getCategoriesOnly,
+  // getCategoriesOnly,
   
 } = require("../controllers/adminControllers");
 
@@ -29,7 +29,7 @@ router.get("/items", getItems);
 router.post("/add-category",upload.single("categoryImage"),addCategory)
 router.delete("/remove-category/:id",removeCategory)
 router.get("/categories",getCategories)
-router.get("/items/categories", getCategoriesOnly);
+// router.get("/items/categories", getCategoriesOnly);
 
 // Tags route
 router.post("/add-tag",addTags)
