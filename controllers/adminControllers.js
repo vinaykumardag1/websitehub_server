@@ -69,7 +69,7 @@ const removeItems = async (req, res) => {
 
 const updateItem = async (req, res) => {
   try {
-    const { id } = req.params; // from /update-item/:id
+    const { id } = req.params; 
     const { websitename, websiteUrl, description } = req.body;
     const newImage = req.file ? req.file : null;
 
@@ -82,7 +82,7 @@ const updateItem = async (req, res) => {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    // Delete old image if a new one is uploaded
+    
     if (newImage && item.image) {
       const oldImagePath = path.join(__dirname, "../uploads", item.image);
       fs.unlink(oldImagePath, (err) => {
@@ -148,7 +148,7 @@ const addCategory = async (req, res) => {
       slug
     });
 
-    await newCategories.save();
+    await newCategory.save();
 
     res.status(201).json({ message: "Category created successfully", category: newCategory });
   } catch (error) {
@@ -176,17 +176,40 @@ const removeCategory = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-const addTags=async(req,res)=>{
-   const {tags,description}=req.body;
-   try{
-    const tag=await Tags.findOne({tags:tags})
-    if(tag){
-      return res.status(400).json({message:'tag is already exitsed'})
+const getCategories = async (req, res) => {
+  try {
+    const categoriesData = await Categories.find();
+
+    if (categoriesData.length === 0) {
+      return res.status(404).json({ message: "No categories found" });
     }
-   }catch(error){
-    return res.json({message:"error occured",error})
-   }
-}
+
+    res.status(200).json({ categoriesData });
+  } catch (error) {
+    res.status(500).json({ message: "Error occurred", error: error.message });
+  }
+};
+
+const addTags = async (req, res) => {
+  const { tags, description } = req.body;
+
+  try {
+
+    const existingTag = await Tags.findOne({ tags: tags });
+    if (existingTag) {
+      return res.status(400).json({ message: 'Tag already exists' });
+    }
+
+
+    const newTag = new Tags({ tags, description });
+    await newTag.save();
+
+    return res.status(201).json({ message: 'Tag added successfully', tag: newTag });
+  } catch (error) {
+    return res.status(500).json({ message: "Error occurred", error: error.message });
+  }
+};
+
 const removeTags = async (req, res) => {
   const { tag } = req.body;
 
@@ -207,6 +230,20 @@ const removeTags = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+// 
+const getTags = async (req, res) => {
+  try {
+    const tagsData = await Tags.find();
+
+    if (tagsData.length === 0) {
+      return res.status(404).json({ message: "No tags found" });
+    }
+
+    res.status(200).json({ tags: tagsData });
+  } catch (error) {
+    res.status(500).json({ message: "Error occurred", error: error.message });
+  }
+};
 
 module.exports = {
   addItems,
@@ -216,4 +253,9 @@ module.exports = {
   //catgories 
   addCategory,
   removeCategory,
+  getCategories,
+  // tags
+  addTags,
+  removeTags,
+  getTags
 };
