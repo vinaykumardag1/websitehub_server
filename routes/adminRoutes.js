@@ -38,6 +38,5 @@ router.post("/add-tag",addTags)
 router.delete("/remove-tag/:id",removeTags)
 router.get("/tags",getTags)
 // 
-router.post("/admin-login",adminLogin)
-// router.post("/admin-register",registerAdmin)
+
 module.exports = router;

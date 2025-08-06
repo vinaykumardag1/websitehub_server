@@ -3,7 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
-
+const cors=require("cors")
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes=require("./routes/adminRoutes")
 const app = express();
@@ -16,7 +16,9 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
 .then(() => console.log("✅ MongoDB connected"))
 .catch((err) => console.error(`❌ MongoDB connection error: ${err.message}`));
-
+app.use(cors({
+  origin:'*'
+}))
 // ✅ Apply Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
