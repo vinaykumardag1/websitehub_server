@@ -8,7 +8,7 @@ const { Register, Login ,
 const {getUserProfile, getuserUpdate}=require("../controllers/userController")
 const authMiddleware=require("../middleware/authMiddleware")
 
-const {  googleAuth,googleAuthCallback,facebookAuth,facebookAuthCallback}=require("../controllers/passportControllers")
+const {  googleAuth,googleAuthCallback,facebookAuth,facebookAuthCallback,loginStatus,oAuthlogout}=require("../controllers/passportControllers")
 // ✅ Routes
 router.post("/register", Register);
 router.post("/login", Login);
@@ -20,17 +20,19 @@ router.post("/logout",logout)
 router.get("/profile",authMiddleware,getUserProfile)
 router.put("/profile-update",authMiddleware,getuserUpdate)
 // 
-// Start Google OAuth
-router.get("/auth/google", googleAuth);
-
-// Google OAuth Callback
-router.get("/auth/google/callback", googleAuthCallback);
+// Google
 router.get("/auth/google", googleAuth);
 router.get("/auth/google/callback", googleAuthCallback);
 
-// -------- FACEBOOK --------
+// Facebook
 router.get("/auth/facebook", facebookAuth);
 router.get("/auth/facebook/callback", facebookAuthCallback);
+
+// Login status
+router.get("/auth/status", loginStatus);
+
+// Logout
+router.post("/auth/logout", oAuthlogout);
 
 module.exports = router
 

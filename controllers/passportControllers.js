@@ -1,24 +1,9 @@
 const passport = require("passport");
 
-// Redirect to Google OAuth
+// -------- GOOGLE --------
 const googleAuth = passport.authenticate("google", { scope: ["profile", "email"] });
 
-// Handle Google OAuth Callback
 const googleAuthCallback = [
-  passport.authenticate("google", { failureRedirect: "/" }),
-  (req, res) => {
-    res.json({
-      message: "Logged in successfully",
-      user: req.user,
-    });
-  }
-];
-
-
-// -------- GOOGLE --------
-exports.googleAuth = passport.authenticate("google", { scope: ["profile", "email"] });
-
-exports.googleAuthCallback = [
   passport.authenticate("google", { failureRedirect: "/" }),
   (req, res) => {
     res.json({
@@ -41,9 +26,33 @@ const facebookAuthCallback = [
   }
 ];
 
-module.exports={
-    googleAuth,
-    googleAuthCallback,
-    facebookAuth,
-    facebookAuthCallback,
-}
+// -------- LOGIN STATUS --------
+const loginStatus = (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json({
+      loggedIn: true,
+      user: req.user
+    });
+  } else {
+    res.json({
+      loggedIn: false
+    });
+  }
+};
+
+// -------- LOGOUT --------
+const oAuthlogout = (req, res, next) => {
+  req.logout(err => {
+    if (err) return next(err);
+    res.json({ message: "Logged out successfully" });
+  });
+};
+
+module.exports = {
+  googleAuth,
+  googleAuthCallback,
+  facebookAuth,
+  facebookAuthCallback,
+  loginStatus,
+  oAuthlogout
+};
