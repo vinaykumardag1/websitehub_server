@@ -16,14 +16,15 @@ const {
   getTags,
   // getCategoriesOnly,
   adminLogin,
-  // registerAdmin
+  // registerAdmin, 
+  getUsers,
   
 } = require("../controllers/adminControllers");
 
 const upload = require("../middleware/uploads");
 
 // Routes
-router.post("/add-item", addItems);
+router.post("/add-item",upload.single("image"),addItems);
 router.put("/update-item/:id", updateItem);
 router.delete("/delete/:id", removeItems);
 router.get("/items", getItems);
@@ -38,5 +39,6 @@ router.post("/add-tag",addTags)
 router.delete("/remove-tag/:id",removeTags)
 router.get("/tags",getTags)
 // 
-
+router.post("/admin-login",adminLogin)
+router.get("/get-customers",getUsers)
 module.exports = router;

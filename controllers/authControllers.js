@@ -17,8 +17,8 @@ const generateAccessToken = (user) => {
     {
       id: user._id,
       email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      firstname: user.firstname,
+      lastname: user.lastname,
       mobile: user.mobile,
     },
     JWT_SECRET,
@@ -31,8 +31,8 @@ const generateRefreshToken = (user) => {
     {
       id: user._id,
       email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      firstname: user.firstname,
+      lastname: user.lastname,
       mobile: user.mobile,
     },
     JWT_REFRESH_SECRET,
@@ -42,10 +42,10 @@ const generateRefreshToken = (user) => {
 
 // ✅ Register Controller
 const Register = async (req, res) => {
-  const { firstName, lastName, email, mobile, password, terms_conditions } = req.query;
+  const { firstname, lastname, email, mobile, password, terms_conditions } = req.query;
 
   try {
-    if (!firstName || !lastName || !email || !mobile || !password || terms_conditions === undefined) {
+    if (!firstname || !lastname || !email || !mobile || !password || terms_conditions === undefined) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -57,8 +57,8 @@ const Register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
-      firstName,
-      lastName,
+      firstname,
+      lastname,
       email,
       mobile,
       password: hashedPassword,
@@ -69,8 +69,8 @@ const Register = async (req, res) => {
       message: "User registered successfully",
       user: {
         id: newUser._id,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
+        firstname: newUser.firstname,
+        lastname: newUser.lastname,
         email: newUser.email,
         mobile: newUser.mobile,
       },
@@ -81,10 +81,10 @@ const Register = async (req, res) => {
 };
 
 // ✅ Login Controller
-const { v4: uuidv4 } = require("uuid");
+
 
 const Login = async (req, res) => {
-  const { email, password } = req.body; // Use body, not query
+  const { email, password } = req.query; // Use body, not query
 
   try {
     const user = await User.findOne({ email });
@@ -96,10 +96,7 @@ const Login = async (req, res) => {
     const authToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    // ✅ Generate and assign sessionId
-    // const sessionId = uuidv4();
-    // req.session.userId = user._id;
-    // req.session.sessionId = sessionId;
+
 
     // ✅ Set refresh token cookie
     res.cookie("refreshToken", refreshToken, {
@@ -111,12 +108,12 @@ const Login = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
-      sessionId,
+
       authToken,
       user: {
         id: user._id,
-        firstName: user.firstname,
-        lastName: user.lastname,
+        firstname: user.firstname,
+        lastname: user.lastname,
         email: user.email,
         mobile: user.mobile,
       },

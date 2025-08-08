@@ -1,5 +1,5 @@
 const Admin = require("../../models/admin.login");
-
+const User=require("../../models/User")
 // Admin Login
 const adminLogin = async (req, res) => {
   const { username, password } = req.query;
@@ -43,7 +43,19 @@ const registerAdmin = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+const getUsers=async (req,res)=>{
+  try{
+    const users=await User.find()
+    if(!users){
+      return res.status(403).json({message:"users not found"})
+    }
+    await res.status(200).json(users)
+  }catch(error){
+    res.status(500).json({message:error})
+  }
+}
 module.exports={
     adminLogin,
     registerAdmin,
+    getUsers,
 }
