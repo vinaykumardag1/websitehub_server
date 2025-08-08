@@ -1,5 +1,6 @@
 const mongoose=require("mongoose")
 const ItemSchema = new mongoose.Schema({
+  item_id:{type:Number,required:true},
   websitename: { type: String, required: true },
   websiteUrl: { type: String, required: true },
   description: String,

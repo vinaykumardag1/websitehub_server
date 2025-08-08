@@ -1,8 +1,9 @@
 const fs = require("fs");
 const path = require("path");
 const Items = require("../../models/Items");
-
+const getNextId = require('../../config/getNextId');
 // ✅ Add new item
+
 const addItems = async (req, res) => {
   try {
     const {
@@ -35,14 +36,18 @@ const addItems = async (req, res) => {
       return res.status(400).json({ message: "Website already exists" });
     }
 
-    const newItem = new Items({
+    // ✅ Generate sequential numeric item_id
+    const itemId = await getNextId('item_id');
+
+    const newItem = new Item({
+      item_id: itemId,
       websitename,
       websiteUrl,
       description,
       image,
       category,
       mobileApp,
-      ai: false,
+      ai: ai ?? false,
       pricingType,
       pricingDetails,
       tags: Array.isArray(tags) ? tags : tags?.split(","),
@@ -59,6 +64,7 @@ const addItems = async (req, res) => {
     return res.status(500).json({ message: "Server error while adding item" });
   }
 };
+
 
 // ✅ Remove item
 const removeItems = async (req, res) => {
